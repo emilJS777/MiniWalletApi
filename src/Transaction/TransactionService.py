@@ -1,25 +1,29 @@
 import os
 import requests
+
+from src.Network.INetworkRepository import INetworkRepository
 from src.Token.ITokenRepository import ITokenRepository
 from src.__Parents.Rosponse import Response
 
 
 class TransactionService(Response):
-    def __init__(self, token_repository: ITokenRepository):
+    def __init__(self, token_repository: ITokenRepository, network_repository: INetworkRepository):
         self.wrapper_url = os.environ.get('COIN_WRAPPER_URL')
         self.token_repository = token_repository
+        self.network_repository = network_repository
 
-    def get_transactions(self, network_id: int, symbol: str,  address: str, limit: int, offset: int):
+    def get_transactions(self, network_id: int, address: str, limit: int, offset: int):
         try:
-            token = self.token_repository.get_by_network_id_token_symbol(network_id=network_id,
-                                                                         token_symbol=symbol)
-            if not token:
-                return self.response_not_found()
-            response = requests.get(url=f"{self.wrapper_url}/transaction?symbol={token.network.symbol}&address={address}&limit={limit}&offset={offset}&contract_address={token.contract_address}")
+            network = self.network_repository.get_by_id(network_id=network_id)
+
+            history_list = []
+            response = requests.get(url=f"{self.wrapper_url}/transaction?symbol={network.symbol}&address={address}&limit={limit}&offset={offset}")
+
+
             if response.status_code == 200:
-                return self.response_ok(response.json().get('obj'))
-            else:
-                return self.response_err_msg(response.json().get('obj').get('msg'))
+                history_list = history_list + response.json().get('obj')
+            print(history_list)
+            return self.response_ok(history_list)
         except Exception as e:
             print(f"get transactions failed {e}")
             return self.response_err_msg(f'get transactions failed {e}')
