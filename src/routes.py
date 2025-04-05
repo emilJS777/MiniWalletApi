@@ -14,3 +14,6 @@ api.add_resource(WalletDetailsController, "/walletDetails")
 
 from src.Transaction.TransactionController import TransactionController
 api.add_resource(TransactionController, "/transaction")
+
+from src.Fee.FeeController import FeeController
+api.add_resource(FeeController, "/fee")

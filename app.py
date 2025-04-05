@@ -24,20 +24,20 @@ if __name__ == '__main__':
                 asyncio.set_event_loop(loop)
                 updater_service = UpdaterService(token_repository=TokenRepository(), socket=Socket())
                 loop.run_until_complete(updater_service.start_price_updated())
-
-        def thread_function2():
-            with app.app_context():
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                updater_service = UpdaterService(token_repository=TokenRepository(), socket=Socket())
-                loop.run_until_complete(updater_service.start_fee_updated())
+        #
+        # def thread_function2():
+        #     with app.app_context():
+        #         loop = asyncio.new_event_loop()
+        #         asyncio.set_event_loop(loop)
+        #         updater_service = UpdaterService(token_repository=TokenRepository(), socket=Socket())
+        #         loop.run_until_complete(updater_service.start_fee_updated())
 
         # Start the listener thread
         listener_thread = threading.Thread(target=thread_function)
         listener_thread.start()
 
-        listener_thread2 = threading.Thread(target=thread_function2)
-        listener_thread2.start()
+        # listener_thread2 = threading.Thread(target=thread_function2)
+        # listener_thread2.start()
 
     print("app run")
     app.run(debug=True)
