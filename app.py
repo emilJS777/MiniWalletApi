@@ -2,6 +2,7 @@ import asyncio
 import threading
 
 from src import app
+from src.Price.PriceRepository import PriceRepository
 from src.Socket.Socket import Socket
 from src.Updater.UpdaterService import UpdaterService
 from src.Token.TokenRepository import TokenRepository
@@ -22,7 +23,7 @@ if __name__ == '__main__':
             with app.app_context():
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                updater_service = UpdaterService(token_repository=TokenRepository(), socket=Socket())
+                updater_service = UpdaterService(token_repository=TokenRepository(), socket=Socket(), price_repository=PriceRepository())
                 loop.run_until_complete(updater_service.start_price_updated())
         #
         # def thread_function2():

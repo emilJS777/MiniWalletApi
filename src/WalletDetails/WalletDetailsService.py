@@ -1,6 +1,7 @@
 import base64
 import io
 from .IWalletDetailsRepository import IWalletDetailsRepository
+from ..Price.IPriceRepository import IPriceRepository
 from ..Price.PriceService import PriceService
 from ..Token.ITokenRepository import ITokenRepository
 from ..__Parents.Rosponse import Response
@@ -10,10 +11,11 @@ import requests
 import qrcode
 
 class WalletDetailsService(Response):
-    def __init__(self, wallet_details_repository: IWalletDetailsRepository, token_repository: ITokenRepository):
+    def __init__(self, wallet_details_repository: IWalletDetailsRepository, token_repository: ITokenRepository, price_repository: IPriceRepository):
         self.wallet_details_repository: IWalletDetailsRepository = wallet_details_repository
         self.token_repository: ITokenRepository = token_repository
         self.price_service = PriceService()
+        self.price_repository = price_repository
 
     def create_qr(self, address: str):
         qr = qrcode.QRCode(
@@ -37,7 +39,7 @@ class WalletDetailsService(Response):
 
     def get_details(self, network_id: int) -> dict:
         wallet_detail = self.wallet_details_repository.get(wallet_id=g.wallet.id, network_id=network_id)
-
+        prices = self.price_repository.get_all()
 
         if not wallet_detail:
             return self.response_not_found()
@@ -48,8 +50,8 @@ class WalletDetailsService(Response):
             # external_price_table = self.price_service.get_price_table()
             for token in tokens:
                 response = requests.get(f"{os.environ.get('COIN_WRAPPER_URL')}/balance?symbol={token.network.symbol}&address={wallet_detail.address}&contract_address={token.contract_address}")
-                usd_price = "0"
-                change_24_h = "0"
+                usd_price = next((p.usd_price for p in prices if p.symbol == token.symbol), "0")
+                change_24_h = next((p.change_24h for p in prices if p.symbol == token.symbol), "0")
                 token_details.append({"id": token.id, "network_symbol": token.network.symbol, "native": token.native, "symbol": token.symbol, "balance": str(response.json()['obj']['balance']), 'label': token.label, "usd_price": usd_price, "change_24h": change_24_h})
         except Exception as e:
             return self.response_err_msg(str(e))

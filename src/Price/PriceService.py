@@ -1,5 +1,4 @@
 from typing import final
-
 import requests
 from bs4 import BeautifulSoup
 

@@ -1,6 +1,7 @@
 import time
 
 from .IUpdaterService import IUpdaterService
+from ..Price.IPriceRepository import IPriceRepository
 # from ..Fee.FeeService import FeeService
 from ..Price.PriceService import PriceService
 from ..Socket.ISocket import ISocket
@@ -8,11 +9,12 @@ from ..Token.TokenRepository import TokenRepository
 
 
 class UpdaterService(IUpdaterService):
-    def __init__(self, socket: ISocket, token_repository: TokenRepository):
+    def __init__(self, socket: ISocket, token_repository: TokenRepository, price_repository: IPriceRepository):
         self.socket = socket
         self.price_service = PriceService()
         # self.fee_service = FeeService()
         self.token_repository = token_repository
+        self.price_repository = price_repository
     #
     # def start_fee_updated(self):
     #     tokens = self.token_repository.get_all()
@@ -32,6 +34,7 @@ class UpdaterService(IUpdaterService):
             for token in tokens:
                 usd_price, change_24h = self.price_service.get_price(external_price_table=price_table, label=token.price_key)
                 price_data.append({"symbol": token.symbol, "usd_price": usd_price, "change_24h": change_24h})
-            self.socket.send("onPrice", {"priceData": price_data})
-            time.sleep(20)
+                self.socket.send("onPrice", {"priceData": price_data})
+                self.price_repository.create(body={'usd_price': str(usd_price), 'change_24h': str(change_24h), 'symbol': token.symbol})
+            time.sleep(10)
 
